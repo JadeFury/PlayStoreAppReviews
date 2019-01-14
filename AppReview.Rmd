@@ -5,6 +5,20 @@ date: "January 12, 2019"
 output: html_document
 ---
 
+```{r}
+library(tidyverse)
+```
 
 
+##Reading in the Data
+```{r}
+apps = read_csv("googleplaystore.csv")
+head(apps)
+```
+
+##Average rating of each genre
+
+```{r}
+apps %>% group_by(Genres) %>% mean(Rating)
+```
 
