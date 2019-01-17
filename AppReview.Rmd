@@ -19,6 +19,10 @@ head(apps)
 ##Average rating of each genre
 
 ```{r}
-apps %>% group_by(Genres) %>% mean(Rating)
+apps %>% group_by(Genres) %>% summarise(avg=mean(Rating))
+```
+```{r}
+review = read_csv
+review
 ```
 
