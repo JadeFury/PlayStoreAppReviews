@@ -18,11 +18,33 @@ head(apps)
 
 ##Average rating of each genre
 
+Filtered out the missing rating values and stored them in a new data frame which we will use for the rest of the analysis.
+
 ```{r}
-apps %>% group_by(Genres) %>% summarise(avg=mean(Rating))
+apps %>% filter(Rating != 'NaN') -> true_apps
+true_apps %>% group_by(Genres) %>% summarise(avg=mean(Rating))
 ```
+Getting a glimpse of the data to convert the numerical data from being characters
 ```{r}
-review = read_csv
-review
+glimpse(true_apps)
+```
+
+##Seperating Numerical and Character values from columns
+```{r}
+true_apps %>% filter(Size != "Varies with device") %>% 
+  separate(Size, c("Size","Type"), sep = -1, convert = TRUE) %>% 
+  separate(Installs, c("Installs","Symbol"), sep = -1, convert = TRUE) -> apps2
+
+apps2$Symbol = NULL
+apps2$Category = NULL
+apps2$`Current Ver`= NULL
+```
+Removed Symbol because it was just character; removed category because it was the same as genre, removed Current Version because it isn't as necessary as when the app was last updated. Kept Android version because exploring app compatibility with OS might be interesting.
+
+##Converting character values to numeric
+```{r}
+apps2$Installs = as.numeric(gsub(",","",apps2$Installs))
+apps2$Size = as.numeric(as.character(apps2$Size))
+glimpse(apps2)
 ```
 
