@@ -52,6 +52,14 @@ Converting dates
 library(lubridate)
 apps2$`Last Updated` = gsub(",","",apps2$`Last Updated`)
 apps2 %>% mutate(`Last Update` = mdy(`Last Updated`))
-View(apps2)
+
+```
+##Some Descriptive Statistics
+```{r}
+apps2 %>% group_by(Genres) %>% summarise(m=mean(Rating))
+(apps_aov = aov(Rating~Size+Installs+Price, data = apps2))
+
+summary(apps_aov)
+
 ```
 
