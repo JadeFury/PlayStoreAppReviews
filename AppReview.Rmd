@@ -47,4 +47,11 @@ apps2$Installs = as.numeric(gsub(",","",apps2$Installs))
 apps2$Size = as.numeric(as.character(apps2$Size))
 glimpse(apps2)
 ```
+Converting dates
+```{r}
+library(lubridate)
+apps2$`Last Updated` = gsub(",","",apps2$`Last Updated`)
+apps2 %>% mutate(`Last Update` = mdy(`Last Updated`))
+View(apps2)
+```
 
