@@ -61,6 +61,8 @@ apps2 %>% mutate(SIZE = case_when(
                               Type == "k" ~ Size/1024,
                               TRUE ~ NA_real_)) -> apps2
 
+apps2 %>% mutate()
+
 apps2$Size = NULL
 apps2$Type = NULL
 ```
@@ -70,7 +72,7 @@ apps2$Type = NULL
 ##Some Descriptive Statistics
 ```{r}
 apps2 %>% group_by(Genres) %>% summarise(m=mean(Rating))
-(apps_aov = aov(Rating~Size+Installs+Price+Reviews+Genres+`Content Rating`+`Last Update`, data = apps2))
+(apps_aov = aov(Rating~SIZE+Installs+Price+Reviews+Genres+`Content Rating`+`Last Update`, data = apps2))
 
 summary(apps_aov)
 
@@ -83,5 +85,12 @@ ggplot(apps2, aes(Rating,log(Reviews)))+geom_point()+xlim(0,5)+ylim(min(log(apps
 ggplot(apps2, aes(Rating,SIZE))+geom_point()+xlim(0,5)+ylim(min(apps2$SIZE),max(apps2$SIZE))+geom_smooth()
 #appplot + ylim(0,5) + xlim(1,1.0e+09)
 #appplot + ylim(0,5)
+```
+Effective rating goes down after reaching its peak in proportion to the categories above as expected. This highlights the fact that good apps exist but doesn't get much attention or the ratings and reviews are fabricated.
+
+## Regression Models
+```{r}
+appreg = lm(Rating~SIZE+Installs+Price+Reviews+Genres+`Content Rating`+`Last Update`, data = apps2)
+summary(appreg)
 ```
 
