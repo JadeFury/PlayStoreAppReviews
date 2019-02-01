@@ -35,10 +35,7 @@ true_apps %>% filter(Size != "Varies with device") %>%
   separate(Size, c("Size","Type"), sep = -1, convert = TRUE) %>% 
   separate(Installs, c("Installs","Symbol"), sep = -1, convert = TRUE) %>% drop_na() -> apps2
 
-  # case_when(
-  #   Price[1]=="$" ~ as.numeric(gsub("$","",apps2$Price)),
-  #   Price == "0" ~ Price,
-  #   TRUE ~ NA_real_)
+apps2$Price = parse_number(apps2$Price)
 
 apps2$Symbol = NULL
 apps2$Category = NULL
