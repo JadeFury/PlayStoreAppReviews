@@ -63,7 +63,7 @@ apps2 %>% mutate(SIZE = case_when(
                               Type == "k" ~ Size/1024,
                               TRUE ~ NA_real_)) -> apps2
 
-apps2 %>% mutate()
+apps2 %>% separate_rows(Genres, sep = ";", convert = FALSE) -> apps2
 
 apps2$Size = NULL
 apps2$Type = NULL
@@ -85,6 +85,7 @@ summary(apps_aov)
 ggplot(apps2, aes(Rating,log(Installs)))+geom_point()+xlim(0,5)+ylim(min(log(apps2$Installs)),max(log(apps2$Installs)))+geom_smooth()
 ggplot(apps2, aes(Rating,log(Reviews)))+geom_point()+xlim(0,5)+ylim(min(log(apps2$Reviews)),max(log(apps2$Reviews)))+geom_smooth()
 ggplot(apps2, aes(Rating,SIZE))+geom_point()+xlim(0,5)+ylim(min(apps2$SIZE),max(apps2$SIZE))+geom_smooth()
+ggplot(apps2, aes(Rating,Price))+geom_point()+xlim(0,5)+ylim(min(apps2$Price),max(apps2$Price))+geom_smooth()
 #appplot + ylim(0,5) + xlim(1,1.0e+09)
 #appplot + ylim(0,5)
 ```
@@ -92,10 +93,10 @@ Effective rating goes down after reaching its peak in proportion to the categori
 
 ## Regression Models
 ```{r}
-appreg = lm(Rating~SIZE+log(Installs)+log(Reviews)+`Last Update`, data = apps2)
+appreg = lm(Rating~SIZE+I(log(Installs))+I(log(Reviews))+`Last Update`+Genres, data = apps2, weights = Installs)
 summary(appreg)
 ```
-
+Taking the log of Installs and Reviews and weighing it with the Installs helped increase the R squared to about 42%
 ```{r}
 ggplot(appreg, aes(x=.fitted, y=.resid))+geom_point()+geom_smooth()
 ```
