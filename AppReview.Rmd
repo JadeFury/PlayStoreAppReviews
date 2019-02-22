@@ -56,6 +56,16 @@ apps2$`Last Updated` = gsub(",","",apps2$`Last Updated`)
 apps2 %>% mutate(`Last Update` = mdy(`Last Updated`)) -> apps2
 
 ```
+Attempting to factor prices as paid or not:
+```{r}
+apps2 %>% mutate(Price = case_when(
+                              Price == 0 ~ Price, 
+                              Price > 0 ~ Price/Price,
+                              TRUE ~ NA_real_)) -> apps2
+#apps2 %>% factor(Price, levels = 1:2, labels = "Paid") %>% select(Price)
+
+```
+
 Converting kilobyte app size
 ```{r}
 apps2 %>% mutate(SIZE = case_when(
@@ -92,8 +102,9 @@ ggplot(apps2, aes(Rating,Price))+geom_point()+xlim(0,5)+ylim(min(apps2$Price),ma
 Effective rating goes down after reaching its peak in proportion to the categories above as expected. This highlights the fact that good apps exist but doesn't get much attention or the ratings and reviews are fabricated.
 
 ## Regression Models
+
 ```{r}
-appreg = lm(Rating~SIZE+I(log(Installs))+I(log(Reviews))+`Last Update`+Genres, data = apps2, weights = Installs)
+appreg = lm(Rating~SIZE+I(log(Installs))+I(log(Reviews))+`Last Update`+Genres+Price, data = apps2, weights = Installs)
 summary(appreg)
 ```
 Taking the log of Installs and Reviews and weighing it with the Installs helped increase the R squared to about 42%
