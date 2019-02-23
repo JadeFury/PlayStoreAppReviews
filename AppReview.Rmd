@@ -112,3 +112,14 @@ Taking the log of Installs and Reviews and weighing it with the Installs helped 
 ggplot(appreg, aes(x=.fitted, y=.resid))+geom_point()+geom_smooth()
 ```
 
+##Kmeans for Genres
+```{r}
+library(klaR)
+```
+```{r}
+genres = kmodes(apps2[,c(1,3:5)], modes = 5, iter.max = 10, weighted = FALSE)
+
+plot(jitter(apps2$Rating),col = genres$cluster)
+points(genres$modes, col = 1:5, pch = 8)
+```
+
