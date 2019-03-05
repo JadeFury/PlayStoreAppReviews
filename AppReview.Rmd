@@ -103,11 +103,21 @@ Effective rating goes down after reaching its peak in proportion to the categori
 
 ## Regression Models
 
+#Fixing duplicate Genres under similar terms
+```{r}
+apps2 %>% mutate(Genres = case_when(
+                              Genres == "Educational" ~ "Education", 
+                              Genres == "Music & Audio" ~ "Music",
+                              Genres == "Music & Video" ~ "Music",
+                              TRUE ~ Genres)) -> apps2
+```
+
+
 ```{r}
 appreg = lm(Rating~SIZE+I(log(Installs))+I(log(Reviews))+`Last Update`+Genres+Price, data = apps2, weights = Installs)
 summary(appreg)
 ```
-Taking the log of Installs and Reviews and weighing it with the Installs helped increase the R squared to about 42%
+Taking the log of Installs and Reviews and weighing it with the Installs helped increase the R squared to about 53%
 ```{r}
 ggplot(appreg, aes(x=.fitted, y=.resid))+geom_point()+geom_smooth()
 ```
@@ -117,7 +127,7 @@ ggplot(appreg, aes(x=.fitted, y=.resid))+geom_point()+geom_smooth()
 library(klaR)
 ```
 ```{r}
-genres = kmodes(apps2[,c(1,3:5,7)], modes = 5, iter.max = 10, weighted = FALSE)
+genres = kmodes(apps2[,c(3:7,11)], modes = 10, iter.max = 10, weighted = FALSE)
 
 plot(jitter(apps2$Rating),col = genres$cluster)
 points(genres$modes, col = 1:5, pch = 8)
@@ -126,6 +136,50 @@ genres$cluster
 ```
 ```{r}
 apps2 %>% mutate(cluster=genres$cluster) -> apps2
-apps2
+```
+```{r}
+clustapp = genres$modes
+```
+```{r}
+clustapp %>% distinct(Genres)
+clustapp$Genres[2]
+```
+```{r}
+apps2 %>% group_by(cluster, Genres) %>% count() %>% summarise(m=max(n)) %>% summarise(mm=max(m))  
+```
+```{r}
+apps2 %>% mutate(True_Genre = case_when(
+                                         cluster == 1 & Genres != clustapp$Genres[1] ~ clustapp$Genres[1],
+                                         cluster == 2 & Genres != clustapp$Genres[2] ~ clustapp$Genres[2],
+                                         cluster == 3 & Genres != clustapp$Genres[3] ~ clustapp$Genres[3],
+                                         cluster == 4 & Genres != clustapp$Genres[4] ~ clustapp$Genres[4],
+                                         cluster == 5 & Genres != clustapp$Genres[5] ~ clustapp$Genres[5],
+                                         cluster == 6 & Genres != clustapp$Genres[6] ~ clustapp$Genres[6],
+                                         cluster == 7 & Genres != clustapp$Genres[7] ~ clustapp$Genres[7],
+                                         cluster == 8 & Genres != clustapp$Genres[8] ~ clustapp$Genres[8],
+                                         cluster == 9 & Genres != clustapp$Genres[9] ~ clustapp$Genres[9],
+                                         cluster == 10 & Genres != clustapp$Genres[10] ~ clustapp$Genres[10],
+                                         TRUE ~ Genres)) -> apps3
+
+```
+
+```{r}
+apps3 %>% group_by(True_Genre) %>% count()
+```
+
+##Regression Model with the new Genres:
+
+```{r}
+newreg = lm(Rating~SIZE+I(log(Installs))+I(log(Reviews))+`Last Update`+True_Genre+Price, data = apps3, weights = Installs)
+summary(newreg)
+```
+```{r}
+apps3 %>% filter(Rating >= 1 & Rating < 4.6) -> apps4 
+reg1 = lm(Rating~SIZE+I(log(Installs))+I(log(Reviews))+`Last Update`+True_Genre+Price, data = apps4, weights = Installs)
+summary(reg1)
+```
+
+```{r}
+ggplot(reg1, aes(x=.fitted, y=.resid))+geom_point()+geom_smooth()
 ```
 
