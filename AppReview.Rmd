@@ -7,6 +7,9 @@ output: html_document
 
 ```{r}
 library(tidyverse)
+library(lubridate)
+library(klaR)
+library(broom)
 ```
 
 
@@ -51,7 +54,7 @@ glimpse(apps2)
 ```
 Converting dates
 ```{r}
-library(lubridate)
+
 apps2$`Last Updated` = gsub(",","",apps2$`Last Updated`)
 apps2 %>% mutate(`Last Update` = mdy(`Last Updated`)) -> apps2
 
@@ -123,9 +126,7 @@ ggplot(appreg, aes(x=.fitted, y=.resid))+geom_point()+geom_smooth()
 ```
 
 ##Kmeans for Genres
-```{r}
-library(klaR)
-```
+
 ```{r}
 genres = kmodes(apps2[,c(3:7,11)], modes = 10, iter.max = 10, weighted = FALSE)
 
@@ -133,6 +134,7 @@ plot(jitter(apps2$Rating),col = genres$cluster)
 points(genres$modes, col = 1:5, pch = 8)
 genres$modes
 genres$cluster
+
 ```
 ```{r}
 apps2 %>% mutate(cluster=genres$cluster) -> apps2
@@ -174,12 +176,44 @@ newreg = lm(Rating~SIZE+I(log(Installs))+I(log(Reviews))+`Last Update`+True_Genr
 summary(newreg)
 ```
 ```{r}
-apps3 %>% filter(Rating >= 1 & Rating < 4.6) -> apps4 
-reg1 = lm(Rating~SIZE+I(log(Installs))+I(log(Reviews))+`Last Update`+True_Genre+Price, data = apps4, weights = Installs)
+apps3 %>% filter(Rating >= 1 & Rating < 5) -> apps4 
+reg1 = lm(Rating~SIZE+I(log(Installs))+I(log(Reviews))+`Last Update`+True_Genre-1+Price, data = apps4, weights = Installs)
 summary(reg1)
 ```
 
 ```{r}
 ggplot(reg1, aes(x=.fitted, y=.resid))+geom_point()+geom_smooth()
+```
+Making regression models for each genre of apps
+```{r}
+
+```
+
+```{r}
+apps4 %>% filter(True_Genre == "Action") %>% lm(Rating~SIZE+I(log(Installs))+I(log(Reviews))+`Last Update`+Price, data = ., weights = Installs) %>% tidy() 
+apps4 %>% filter(True_Genre == "Business") %>% lm(Rating~SIZE+I(log(Installs))+I(log(Reviews))+`Last Update`+Price, data = ., weights = Installs) %>% tidy() 
+apps4 %>% filter(True_Genre == "Dating") %>% lm(Rating~SIZE+I(log(Installs))+I(log(Reviews))+`Last Update`+Price, data = ., weights = Installs) %>% tidy() 
+apps4 %>% filter(True_Genre == "Education") %>% lm(Rating~SIZE+I(log(Installs))+I(log(Reviews))+`Last Update`+Price, data = ., weights = Installs) %>% tidy() 
+apps4 %>% filter(True_Genre == "Finance") %>% lm(Rating~SIZE+I(log(Installs))+I(log(Reviews))+`Last Update`+Price, data = ., weights = Installs) %>% tidy() 
+apps4 %>% filter(True_Genre == "Health & Fitness") %>% lm(Rating~SIZE+I(log(Installs))+I(log(Reviews))+`Last Update`+Price, data = ., weights = Installs) %>% tidy() 
+apps4 %>% filter(True_Genre == "Lifestyle") %>% lm(Rating~SIZE+I(log(Installs))+I(log(Reviews))+`Last Update`+Price, data = ., weights = Installs) %>% tidy() 
+apps4 %>% filter(True_Genre == "Productivity") %>% lm(Rating~SIZE+I(log(Installs))+I(log(Reviews))+`Last Update`+Price, data = ., weights = Installs) %>% tidy() 
+apps4 %>% filter(True_Genre == "Shopping") %>% lm(Rating~SIZE+I(log(Installs))+I(log(Reviews))+`Last Update`+Price, data = ., weights = Installs) %>% tidy() 
+apps4 %>% filter(True_Genre == "Tools") %>% lm(Rating~SIZE+I(log(Installs))+I(log(Reviews))+`Last Update`+Price, data = ., weights = Installs) %>% tidy() 
+```
+```{r}
+saveRDS(genres, file = "genres.rds")
+```
+
+
+
+##Sentiment Analysis
+```{r}
+reviews = read_csv("googleplaystore_user_reviews.csv")
+(reviews = reviews %>% drop_na())
+```
+
+```{r}
+reviews %>% ggplot(aes(x=Sentiment,y=Sentiment_Subjectivity))+geom_boxplot()
 ```
 
