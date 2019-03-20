@@ -10,6 +10,7 @@ library(tidyverse)
 library(lubridate)
 library(klaR)
 library(broom)
+library(tidytext)
 ```
 
 
@@ -215,5 +216,39 @@ reviews = read_csv("googleplaystore_user_reviews.csv")
 
 ```{r}
 reviews %>% ggplot(aes(x=Sentiment,y=Sentiment_Subjectivity))+geom_boxplot()
+```
+
+##Frequency of Words in Positive and Negative reviews
+```{r}
+(tidy_reviews <- reviews %>% filter(Sentiment != "Neutral") %>% group_by(Sentiment) %>% unnest_tokens(word,Translated_Review))
+```
+
+```{r}
+#Counting the most common terms after filtering out common words
+data("stop_words")
+tidy_reviews = tidy_reviews %>% anti_join(stop_words)
+```
+
+```{r}
+tidy_reviews %>% group_by(Sentiment) %>% count(word,sort = TRUE) %>% filter(n > 500) %>% 
+  mutate(word=reorder(word,n)) %>% 
+  ggplot(aes(word,n))+geom_col()+xlab(NULL)+coord_flip()
+```
+
+```{r}
+frequency <- tidy_reviews %>% mutate(word1 = str_extract(word, "[a-z']+")) %>% 
+  count(Sentiment,word1) %>% group_by(Sentiment) %>% 
+  mutate(proportion = n/sum(n)) %>% 
+  spread(Sentiment,proportion) %>% 
+  gather(Sentiment, proportion,Positive:Negative)
+```
+
+```{r}
+library(scales)
+
+ggplot(frequency,aes(x=proportion,y=Sentiment,color=abs(Sentiment-proportion)))+geom_abline(color="gray40",lty=2)+
+  geom_jitter(alpha = 0.1,size=2.5,width=0.3,height=0.3)+geom_text(aes(label = word),check_overlap = TRUE,vjust=1.5)+
+  scale_x_log10(labels = percent_format()) + scale_y_log10(labels=percent_format())+scale_color_gradient(limits = c(0,0.001),low= "darkslategray4",high="gray75")+facet_wrap(~Sentiment,ncol=2)+theme(legend.position="none")+
+  labs(y="Sentiment",x=NULL)
 ```
 
