@@ -252,3 +252,14 @@ ggplot(frequency,aes(x=proportion,y=Sentiment,color=abs(Sentiment-proportion)))+
   labs(y="Sentiment",x=NULL)
 ```
 
+#WordCloud
+```{r}
+library(wordcloud)
+```
+```{r}
+tidy_reviews %>% filter(Sentiment=="Positive") %>% count(word) %>% with(wordcloud(word,n,max.words = 175))
+```
+```{r}
+tidy_reviews %>% filter(Sentiment=="Negative") %>% count(word) %>% with(wordcloud(word,n,max.words = 175))
+```
+
