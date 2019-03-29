@@ -262,3 +262,68 @@ tidy_reviews %>% filter(Sentiment=="Positive") %>% count(word) %>% with(wordclou
 tidy_reviews %>% filter(Sentiment=="Negative") %>% count(word) %>% with(wordcloud(word,n,max.words = 175))
 ```
 
+```{r}
+tidy_apps = apps4 %>% inner_join(tidy_reviews)
+```
+```{r}
+library(reshape2)
+tidy_apps %>% filter(True_Genre=="Education") %>% count(word,Sentiment,sort = TRUE) %>%  
+  acast(word ~ Sentiment, value.var = "n", fill = 0) %>%
+  comparison.cloud(colors = c("gray20", "gray80"),
+                   max.words = 100)
+
+tidy_apps %>% filter(True_Genre=="Action") %>% count(word,Sentiment,sort = TRUE) %>%  
+  acast(word ~ Sentiment, value.var = "n", fill = 0) %>%
+  comparison.cloud(colors = c("gray20", "gray80"),
+                   max.words = 100)
+
+tidy_apps %>% filter(True_Genre=="Business") %>% count(word,Sentiment,sort = TRUE) %>%  
+  acast(word ~ Sentiment, value.var = "n", fill = 0) %>%
+  comparison.cloud(colors = c("gray20", "gray80"),
+                   max.words = 100)
+
+tidy_apps %>% filter(True_Genre=="Dating") %>% count(word,Sentiment,sort = TRUE) %>%  
+  acast(word ~ Sentiment, value.var = "n", fill = 0) %>%
+  comparison.cloud(colors = c("gray20", "gray80"),
+                   max.words = 100)
+
+tidy_apps %>% filter(True_Genre=="Finance") %>% count(word,Sentiment,sort = TRUE) %>%  
+  acast(word ~ Sentiment, value.var = "n", fill = 0) %>%
+  comparison.cloud(colors = c("gray20", "gray80"),
+                   max.words = 100)
+
+tidy_apps %>% filter(True_Genre=="Health & Fitness") %>% count(word,Sentiment,sort = TRUE) %>%  
+  acast(word ~ Sentiment, value.var = "n", fill = 0) %>%
+  comparison.cloud(colors = c("gray20", "gray80"),
+                   max.words = 100)
+
+tidy_apps %>% filter(True_Genre=="Lifestyle") %>% count(word,Sentiment,sort = TRUE) %>%  
+  acast(word ~ Sentiment, value.var = "n", fill = 0) %>%
+  comparison.cloud(colors = c("gray20", "gray80"),
+                   max.words = 100)
+
+tidy_apps %>% filter(True_Genre=="Productivity") %>% count(word,Sentiment,sort = TRUE) %>%  
+  acast(word ~ Sentiment, value.var = "n", fill = 0) %>%
+  comparison.cloud(colors = c("gray20", "gray80"),
+                   max.words = 100)
+
+tidy_apps %>% filter(True_Genre=="Shopping") %>% count(word,Sentiment,sort = TRUE) %>%  
+  acast(word ~ Sentiment, value.var = "n", fill = 0) %>%
+  comparison.cloud(colors = c("gray20", "gray80"),
+                   max.words = 100)
+
+tidy_apps %>% filter(True_Genre=="Tools") %>% count(word,Sentiment,sort = TRUE) %>%  
+  acast(word ~ Sentiment, value.var = "n", fill = 0) %>%
+  comparison.cloud(colors = c("gray20", "gray80"),
+                   max.words = 100)
+  
+```
+```{r}
+tidy_reviews %>% group_by(Sentiment) %>% count()
+tidy_reviews %>% mutate(Sentiment3=cut(Sentiment_Polarity, breaks=c(-2,0,2))) %>% 
+  glm(Sentiment3~Sentiment_Subjectivity,family = "binomial",data = .) %>% tidy()
+
+
+tidy_reviews %>% mutate(Sentiment2=factor(Sentiment)) 
+```
+
