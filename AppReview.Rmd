@@ -186,9 +186,6 @@ summary(reg1)
 ggplot(reg1, aes(x=.fitted, y=.resid))+geom_point()+geom_smooth()
 ```
 Making regression models for each genre of apps
-```{r}
-
-```
 
 ```{r}
 apps4 %>% filter(True_Genre == "Action") %>% lm(Rating~SIZE+I(log(Installs))+I(log(Reviews))+`Last Update`+Price, data = ., weights = Installs) %>% tidy() 
