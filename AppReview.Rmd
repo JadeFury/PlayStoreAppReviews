@@ -136,7 +136,12 @@ points(genres$modes, col = 1:5, pch = 8)
 genres$modes
 genres$cluster
 
+
 ```
+```{r}
+genres = load("genres.rds")
+```
+
 ```{r}
 apps2 %>% mutate(cluster=genres$cluster) -> apps2
 ```
@@ -198,9 +203,6 @@ apps4 %>% filter(True_Genre == "Lifestyle") %>% lm(Rating~SIZE+I(log(Installs))+
 apps4 %>% filter(True_Genre == "Productivity") %>% lm(Rating~SIZE+I(log(Installs))+I(log(Reviews))+`Last Update`+Price, data = ., weights = Installs) %>% tidy() 
 apps4 %>% filter(True_Genre == "Shopping") %>% lm(Rating~SIZE+I(log(Installs))+I(log(Reviews))+`Last Update`+Price, data = ., weights = Installs) %>% tidy() 
 apps4 %>% filter(True_Genre == "Tools") %>% lm(Rating~SIZE+I(log(Installs))+I(log(Reviews))+`Last Update`+Price, data = ., weights = Installs) %>% tidy() 
-```
-```{r}
-saveRDS(genres, file = "genres.rds")
 ```
 
 
@@ -319,8 +321,19 @@ tidy_apps %>% filter(True_Genre=="Tools") %>% count(word,Sentiment,sort = TRUE) 
 tidy_reviews %>% group_by(Sentiment) %>% count()
 tidy_reviews %>% mutate(Sentiment3=cut(Sentiment_Polarity, breaks=c(-2,0,2))) %>% 
   glm(Sentiment3~Sentiment_Subjectivity,family = "binomial",data = .) %>% tidy()
+```
 
+```{r}
+reg2 = lm(Rating~SIZE+I(log(Installs))+I(log(Reviews))+`Last Update`+True_Genre+Price+Sentiment, data = tidy_apps, weights = Installs)
+summary(reg2)
+```
+Sentiment of the app is also significant to the rating, R-squared is misleading due to the sheer size of the data set.
 
-tidy_reviews %>% mutate(Sentiment2=factor(Sentiment)) 
+```{r}
+tidy_apps %>% mutate(rating_int=cut(Rating,breaks = c(0,1,2,3,4,5))) -> tidy_apps
+```
+
+```{r}
+tidy_apps %>% 
 ```
 
