@@ -235,22 +235,6 @@ tidy_reviews %>% group_by(Sentiment) %>% count(word,sort = TRUE) %>% filter(n > 
   ggplot(aes(word,n))+geom_col()+xlab(NULL)+coord_flip()
 ```
 
-```{r}
-frequency <- tidy_reviews %>% mutate(word1 = str_extract(word, "[a-z']+")) %>% 
-  count(Sentiment,word1) %>% group_by(Sentiment) %>% 
-  mutate(proportion = n/sum(n)) %>% 
-  spread(Sentiment,proportion) %>% 
-  gather(Sentiment, proportion,Positive:Negative)
-```
-
-```{r}
-library(scales)
-
-ggplot(frequency,aes(x=proportion,y=Sentiment))+geom_abline(color="gray40",lty=2)+
-  geom_jitter(alpha = 0.1,size=2.5,width=0.3,height=0.3)+geom_text(aes(label = word1),check_overlap = TRUE,vjust=1.5)+scale_color_gradient(limits = c(0,0.001),low= "darkslategray4",high="gray75")+facet_wrap(~Sentiment,ncol=2)+theme(legend.position="none")+
-  labs(y="Sentiment",x=NULL)
-```
-
 #WordCloud
 ```{r}
 library(wordcloud)
