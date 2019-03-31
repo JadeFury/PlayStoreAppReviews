@@ -213,6 +213,7 @@ reviews = read_csv("googleplaystore_user_reviews.csv")
 (reviews = reviews %>% drop_na())
 ```
 
+
 ```{r}
 reviews %>% ggplot(aes(x=Sentiment,y=Sentiment_Subjectivity))+geom_boxplot()
 ```
@@ -262,78 +263,80 @@ tidy_reviews %>% filter(Sentiment=="Negative") %>% count(word) %>% with(wordclou
 ```
 
 ```{r}
-tidy_apps = apps4 %>% inner_join(tidy_reviews)
+review_apps = apps4 %>% inner_join(reviews)
+review_apps %>% filter(Sentiment != "Neutral") -> review_apps
 ```
 ```{r}
 library(reshape2)
-tidy_apps %>% filter(True_Genre=="Education") %>% count(word,Sentiment,sort = TRUE) %>%  
+review_apps %>% filter(True_Genre=="Education") %>% unnest_tokens(word,Translated_Review) %>% count(word,Sentiment,sort = TRUE) %>%  
   acast(word ~ Sentiment, value.var = "n", fill = 0) %>%
   comparison.cloud(colors = c("gray20", "gray80"),
                    max.words = 100)
 
-tidy_apps %>% filter(True_Genre=="Action") %>% count(word,Sentiment,sort = TRUE) %>%  
+review_apps %>% filter(True_Genre=="Action") %>% unnest_tokens(word,Translated_Review) %>% count(word,Sentiment,sort = TRUE) %>%  
   acast(word ~ Sentiment, value.var = "n", fill = 0) %>%
   comparison.cloud(colors = c("gray20", "gray80"),
                    max.words = 100)
 
-tidy_apps %>% filter(True_Genre=="Business") %>% count(word,Sentiment,sort = TRUE) %>%  
+review_apps %>% filter(True_Genre=="Business") %>% unnest_tokens(word,Translated_Review) %>% count(word,Sentiment,sort = TRUE) %>%  
   acast(word ~ Sentiment, value.var = "n", fill = 0) %>%
   comparison.cloud(colors = c("gray20", "gray80"),
                    max.words = 100)
 
-tidy_apps %>% filter(True_Genre=="Dating") %>% count(word,Sentiment,sort = TRUE) %>%  
+review_apps %>% filter(True_Genre=="Dating") %>% unnest_tokens(word,Translated_Review) %>% count(word,Sentiment,sort = TRUE) %>%  
   acast(word ~ Sentiment, value.var = "n", fill = 0) %>%
   comparison.cloud(colors = c("gray20", "gray80"),
                    max.words = 100)
 
-tidy_apps %>% filter(True_Genre=="Finance") %>% count(word,Sentiment,sort = TRUE) %>%  
+review_apps %>% filter(True_Genre=="Finance") %>% unnest_tokens(word,Translated_Review) %>% count(word,Sentiment,sort = TRUE) %>%  
   acast(word ~ Sentiment, value.var = "n", fill = 0) %>%
   comparison.cloud(colors = c("gray20", "gray80"),
                    max.words = 100)
 
-tidy_apps %>% filter(True_Genre=="Health & Fitness") %>% count(word,Sentiment,sort = TRUE) %>%  
+review_apps %>% filter(True_Genre=="Health & Fitness") %>% unnest_tokens(word,Translated_Review) %>% count(word,Sentiment,sort = TRUE) %>%  
   acast(word ~ Sentiment, value.var = "n", fill = 0) %>%
   comparison.cloud(colors = c("gray20", "gray80"),
                    max.words = 100)
 
-tidy_apps %>% filter(True_Genre=="Lifestyle") %>% count(word,Sentiment,sort = TRUE) %>%  
+review_apps %>% filter(True_Genre=="Lifestyle") %>% unnest_tokens(word,Translated_Review) %>% count(word,Sentiment,sort = TRUE) %>%  
   acast(word ~ Sentiment, value.var = "n", fill = 0) %>%
   comparison.cloud(colors = c("gray20", "gray80"),
                    max.words = 100)
 
-tidy_apps %>% filter(True_Genre=="Productivity") %>% count(word,Sentiment,sort = TRUE) %>%  
+review_apps %>% filter(True_Genre=="Productivity") %>% unnest_tokens(word,Translated_Review) %>% count(word,Sentiment,sort = TRUE) %>%  
   acast(word ~ Sentiment, value.var = "n", fill = 0) %>%
   comparison.cloud(colors = c("gray20", "gray80"),
                    max.words = 100)
 
-tidy_apps %>% filter(True_Genre=="Shopping") %>% count(word,Sentiment,sort = TRUE) %>%  
+review_apps %>% filter(True_Genre=="Shopping") %>% unnest_tokens(word,Translated_Review) %>% count(word,Sentiment,sort = TRUE) %>%  
   acast(word ~ Sentiment, value.var = "n", fill = 0) %>%
   comparison.cloud(colors = c("gray20", "gray80"),
                    max.words = 100)
 
-tidy_apps %>% filter(True_Genre=="Tools") %>% count(word,Sentiment,sort = TRUE) %>%  
+review_apps %>% filter(True_Genre=="Tools") %>% unnest_tokens(word,Translated_Review) %>% count(word,Sentiment,sort = TRUE) %>%  
   acast(word ~ Sentiment, value.var = "n", fill = 0) %>%
   comparison.cloud(colors = c("gray20", "gray80"),
                    max.words = 100)
   
 ```
 ```{r}
-tidy_reviews %>% group_by(Sentiment) %>% count()
-tidy_reviews %>% mutate(Sentiment3=cut(Sentiment_Polarity, breaks=c(-2,0,2))) %>% 
+review_apps %>% group_by(Sentiment) %>% count()
+review_apps %>% mutate(Sentiment3=cut(Sentiment_Polarity, breaks=c(-2,0,2))) %>% 
   glm(Sentiment3~Sentiment_Subjectivity,family = "binomial",data = .) %>% tidy()
 ```
 
 ```{r}
-reg2 = lm(Rating~SIZE+I(log(Installs))+I(log(Reviews))+`Last Update`+True_Genre+Price+Sentiment, data = tidy_apps, weights = Installs)
+reg2 = lm(Rating~SIZE+I(log(Installs))+I(log(Reviews))+`Last Update`+True_Genre+Price+Sentiment, data = review_apps, weights = Installs)
 summary(reg2)
 ```
 Sentiment of the app is also significant to the rating, R-squared is misleading due to the sheer size of the data set.
 
 ```{r}
-tidy_apps %>% mutate(rating_int=cut(Rating,breaks = c(0,1,2,3,4,5))) -> tidy_apps
+
+review_apps %>% mutate(rating_int=cut(Rating,breaks = c(0,1,2,3,4,5))) -> review_apps
 ```
 
 ```{r}
-tidy_apps %>% 
+review_apps %>% filter(Sentiment != "Neutral") %>% ggplot(aes(rating_int, fill=Sentiment))+geom_bar()+facet_wrap(~True_Genre,scales = "free")
 ```
 
