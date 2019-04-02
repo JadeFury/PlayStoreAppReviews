@@ -11,10 +11,15 @@ library(lubridate)
 library(klaR)
 library(broom)
 library(tidytext)
+library(rpart)
+library(rpart.plot)
+library(modelr)
 ```
+##Introduction
 
+Have you ever come across an app, saw it had a 4.5 star rating and it described exactly what you were looking for but then found out the app was extremely buggy? After taking a closer look at the app page you find out it has about a thousand installs and only a couple of hundred reviews. Majority of apps in the Google Play store and any app store in general are misleading like this due to several factors such as number of installs and reviews as mentioned above along with when it was last updated, the OS version it supports and etc. In this analysis we will be exploring the relationship app ratings 
 
-##Reading in the Data
+#Reading in the Data
 ```{r}
 apps = read_csv("googleplaystore.csv")
 head(apps)
@@ -85,7 +90,7 @@ apps2$Type = NULL
 
 
 
-##Some Descriptive Statistics
+#Some Descriptive Statistics
 ```{r}
 apps2 %>% group_by(Genres) %>% summarise(m=mean(Rating))
 (apps_aov = aov(Rating~SIZE+Installs+Price+Reviews+Genres+`Content Rating`+`Last Update`, data = apps2))
@@ -186,6 +191,20 @@ apps3 %>% filter(Rating >= 1 & Rating < 5) -> apps4
 reg1 = lm(Rating~SIZE+I(log(Installs))+I(log(Reviews))+`Last Update`+True_Genre-1+Price, data = apps4, weights = Installs)
 summary(reg1)
 ```
+
+#Testing the accuracy of the Genre Classification
+```{r}
+genre_tree = rpart( cluster ~ Reviews+Installs+SIZE+Rating+`Last Update`, data = apps4, control = rpart.control(minsplit = 1, cp = 0) )
+
+rpart.plot(genre_tree)
+```
+```{r}
+apps4 %>% add_predictions(genre_tree, type = "class" ) %>% 
+  xtabs( ~ pred + cluster, data = .) %>% prop.table()
+ 
+```
+
+
 
 ```{r}
 ggplot(reg1, aes(x=.fitted, y=.resid))+geom_point()+geom_smooth()
