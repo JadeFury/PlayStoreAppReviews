@@ -17,7 +17,7 @@ library(modelr)
 ```
 ##Introduction
 
-Have you ever come across an app, saw it had a 4.5 star rating and it described exactly what you were looking for but then found out the app was extremely buggy? After taking a closer look at the app page you find out it has about a thousand installs and only a couple of hundred reviews. Majority of apps in the Google Play store and any app store in general are misleading like this due to several factors such as number of installs and reviews as mentioned above along with when it was last updated, the OS version it supports and etc. In this analysis we will be exploring the relationship app ratings 
+Have you ever come across an app, saw it had a 4.5 star rating and it described exactly what you were looking for but then found out the app was extremely buggy? After taking a closer look at the app page you find out it has about a thousand installs and only a couple of hundred reviews. Majority of apps in the Google Play store and any app store in general are misleading like this due to several factors such as number of installs and reviews as mentioned above along with when it was last updated, the OS version it supports and etc. In this analysis we will be exploring the overall rating of the app. 
 
 #Reading in the Data
 ```{r}
@@ -25,7 +25,7 @@ apps = read_csv("googleplaystore.csv")
 head(apps)
 ```
 
-##Average rating of each genre
+#Average rating of each genre
 
 Filtered out the missing rating values and stored them in a new data frame which we will use for the rest of the analysis.
 
@@ -33,10 +33,13 @@ Filtered out the missing rating values and stored them in a new data frame which
 apps %>% filter(Rating != 'NaN') -> true_apps
 true_apps %>% group_by(Genres) %>% summarise(avg=mean(Rating))
 ```
+Most genres have a decent ratng around 4.0 but majority of these genres are similar to each other, something that we will simplify later on.
+
 Getting a glimpse of the data to convert the numerical data from being characters
 ```{r}
 glimpse(true_apps)
 ```
+We have a lot of character variables here that we need as numbers, we will be converting them below
 
 ##Seperating Numerical and Character values from columns
 ```{r}
@@ -52,30 +55,32 @@ apps2$`Current Ver`= NULL
 ```
 Removed Symbol because it was just character; removed category because it was the same as genre, removed Current Version because it isn't as necessary as when the app was last updated. Kept Android version because exploring app compatibility with OS might be interesting.
 
-##Converting character values to numeric
+#Converting character values to numeric
+The convert parameter in seperate didn't work so here we are manually converting Installs and Size to numeric variables
 ```{r}
 apps2$Installs = as.numeric(gsub(",","",apps2$Installs))
 apps2$Size = as.numeric(as.character(apps2$Size))
 glimpse(apps2)
 ```
-Converting dates
+
+#Converting dates
 ```{r}
 
 apps2$`Last Updated` = gsub(",","",apps2$`Last Updated`)
 apps2 %>% mutate(`Last Update` = mdy(`Last Updated`)) -> apps2
 
 ```
+
 Attempting to factor prices as paid or not:
 ```{r}
 apps2 %>% mutate(Price = case_when(
                               Price == 0 ~ Price, 
                               Price > 0 ~ Price/Price,
                               TRUE ~ NA_real_)) -> apps2
-#apps2 %>% factor(Price, levels = 1:2, labels = "Paid") %>% select(Price)
 
 ```
 
-Converting kilobyte app size
+#Converting kilobyte app size
 ```{r}
 apps2 %>% mutate(SIZE = case_when(
                               Type == "M" ~ Size, 
@@ -87,7 +92,7 @@ apps2 %>% separate_rows(Genres, sep = ";", convert = FALSE) -> apps2
 apps2$Size = NULL
 apps2$Type = NULL
 ```
-
+The case_when function helped out here because values in the columns to be changed aren't the same.
 
 
 #Some Descriptive Statistics
@@ -98,6 +103,7 @@ apps2 %>% group_by(Genres) %>% summarise(m=mean(Rating))
 summary(apps_aov)
 
 ```
+From the results of the analysis of Variance we observe there is a significant difference in the means in all the categories except for Content Rating, given their p-values are far less than 0.05.
 
 ##Graphing the relationship between the rating and other numerical factors
 ```{r}
@@ -126,16 +132,20 @@ apps2 %>% mutate(Genres = case_when(
 appreg = lm(Rating~SIZE+I(log(Installs))+I(log(Reviews))+`Last Update`+Genres+Price, data = apps2, weights = Installs)
 summary(appreg)
 ```
-Taking the log of Installs and Reviews and weighing it with the Installs helped increase the R squared to about 53%
+Taking the log of Installs and Reviews and weighing it with the Installs helped increase the R squared to about 53% from under 1%
 ```{r}
 ggplot(appreg, aes(x=.fitted, y=.resid))+geom_point()+geom_smooth()
 ```
+This is a peculiar residual plot due to the fact there is a specific range for the ratings (0-5), there seems to be a certain pattern in its overall shape but it's difficult to judge the overall randomness.
 
 ##Kmeans for Genres
 
+Here we attempt K-means clustering to create our mega genres to reduce the overwhelming number of genres we have. We are gonna cluster them into 10 specific genres as we feel it's a good amount of variety.
 ```{r}
+#Here we use the kmodes function from the kLaR package that is suitable for categorical variable clusterting like our genres
 genres = kmodes(apps2[,c(3:7,11)], modes = 10, iter.max = 10, weighted = FALSE)
 
+#Each 
 plot(jitter(apps2$Rating),col = genres$cluster)
 points(genres$modes, col = 1:5, pch = 8)
 genres$modes
@@ -146,21 +156,19 @@ genres$cluster
 ```{r}
 genres = load("genres.rds")
 ```
-
+However I'm loading the cluster that had the preferable generated genres to be used for the rest of the analysis.
 ```{r}
 apps2 %>% mutate(cluster=genres$cluster) -> apps2
 ```
 ```{r}
 clustapp = genres$modes
 ```
-```{r}
-clustapp %>% distinct(Genres)
-clustapp$Genres[2]
-```
+
 ```{r}
 apps2 %>% group_by(cluster, Genres) %>% count() %>% summarise(m=max(n)) %>% summarise(mm=max(m))  
 ```
 ```{r}
+#Adding the new mega genres to the dataset
 apps2 %>% mutate(True_Genre = case_when(
                                          cluster == 1 & Genres != clustapp$Genres[1] ~ clustapp$Genres[1],
                                          cluster == 2 & Genres != clustapp$Genres[2] ~ clustapp$Genres[2],
@@ -186,11 +194,14 @@ apps3 %>% group_by(True_Genre) %>% count()
 newreg = lm(Rating~SIZE+I(log(Installs))+I(log(Reviews))+`Last Update`+True_Genre+Price, data = apps3, weights = Installs)
 summary(newreg)
 ```
+R-squared was lowered and for a good reason since we had an over abundance of genres previously that was inflating the value. 
+
 ```{r}
 apps3 %>% filter(Rating >= 1 & Rating < 5) -> apps4 
 reg1 = lm(Rating~SIZE+I(log(Installs))+I(log(Reviews))+`Last Update`+True_Genre-1+Price, data = apps4, weights = Installs)
 summary(reg1)
 ```
+Here we opted to model app ratings that are in the range of [1,5) since it is a more realistic range. The extremely high R-squared is misleadinsignificant because majority of the apps are free. We also observe there is a negative slope for installs and positive slope for the number of reviews which confirms some of our hypotheses in the introduction where a decent app has a lot of installs but not enough reviews to have the score it truly deserves. As expected, the "Last Update" is also significant because it affects the overall rating of the app if the developers don't update to fix the bugs, so the more updated an app is the better the rating hence the positive slope. 
 
 #Testing the accuracy of the Genre Classification
 ```{r}
@@ -209,7 +220,9 @@ apps4 %>% add_predictions(genre_tree, type = "class" ) %>%
 ```{r}
 ggplot(reg1, aes(x=.fitted, y=.resid))+geom_point()+geom_smooth()
 ```
-Making regression models for each genre of apps
+The residual plot doesn't look much different from before except it's less condensed at the top since we are not considering 5 star ratings.
+
+#Making regression models for each genre of apps
 
 ```{r}
 apps4 %>% filter(True_Genre == "Action") %>% lm(Rating~SIZE+I(log(Installs))+I(log(Reviews))+`Last Update`+Price, data = ., weights = Installs) %>% tidy() 
