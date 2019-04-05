@@ -203,19 +203,6 @@ summary(reg1)
 ```
 Here we opted to model app ratings that are in the range of [1,5) since it is a more realistic range. The extremely high R-squared is misleadinsignificant because majority of the apps are free. We also observe there is a negative slope for installs and positive slope for the number of reviews which confirms some of our hypotheses in the introduction where a decent app has a lot of installs but not enough reviews to have the score it truly deserves. As expected, the "Last Update" is also significant because it affects the overall rating of the app if the developers don't update to fix the bugs, so the more updated an app is the better the rating hence the positive slope. 
 
-#Testing the accuracy of the Genre Classification
-```{r}
-genre_tree = glm( True_Genre ~ Reviews+Installs+SIZE+Rating+`Last Update`, data = apps4, )
-
-summary(genre_tree)
-```
-```{r}
-apps4 %>% add_predictions(genre_tree, type = "class" ) %>% 
-  xtabs( ~ pred + cluster, data = .) %>% prop.table()
- 
-```
-
-
 
 ```{r}
 ggplot(reg1, aes(x=.fitted, y=.resid))+geom_point()+geom_smooth()
@@ -236,11 +223,17 @@ apps4 %>% filter(True_Genre == "Productivity") %>% lm(Rating~SIZE+I(log(Installs
 apps4 %>% filter(True_Genre == "Shopping") %>% lm(Rating~SIZE+I(log(Installs))+I(log(Reviews))+`Last Update`+Price, data = ., weights = Installs) %>% tidy() 
 apps4 %>% filter(True_Genre == "Tools") %>% lm(Rating~SIZE+I(log(Installs))+I(log(Reviews))+`Last Update`+Price, data = ., weights = Installs) %>% tidy() 
 ```
+Here we can observe some of the factors aren't significant at all for some genres while some p-values are borderline zero like in the Action games genre where the p-values for Installs and Reviews are to the power of 200+ while Price and Size aren't significant. Most apps are free so the p-value for price is understandable and size isn't significant to the ratings because every kind of game has its own required size. Last update for action games is significant because if the game isn't patched from bugs soonthen ratings plummet fast.
 
+Last update isn't significant on fiance apps because they are usually made a for a select set of functions and as long as they are performing right, updates aren't need as frequently other than to sort out major nugs or OS optimization. 
+
+Tools app has a highly significant p-value with reviews and that's because tools apps are concerned with managing the phone as a whole like boosting battery life and file management so if they aren't working as intended consumers will report their issues which significantly affect the ratings. 
 
 
 ##Sentiment Analysis
+Here we explore user reviews and visualize their positive and negative reviews and attempt to connect them to our previous modelss
 ```{r}
+#Reading and cleaning the data
 reviews = read_csv("googleplaystore_user_reviews.csv")
 (reviews = reviews %>% drop_na())
 ```
@@ -250,7 +243,7 @@ reviews = read_csv("googleplaystore_user_reviews.csv")
 reviews %>% ggplot(aes(x=Sentiment,y=Sentiment_Subjectivity))+geom_boxplot()
 ```
 
-##Frequency of Words in Positive and Negative reviews
+#Seperating every review into Individual Words
 ```{r}
 (tidy_reviews <- reviews %>% filter(Sentiment != "Neutral") %>% group_by(Sentiment) %>% unnest_tokens(word,Translated_Review))
 ```
@@ -266,6 +259,7 @@ tidy_reviews %>% group_by(Sentiment) %>% count(word,sort = TRUE) %>% filter(n > 
   mutate(word=reorder(word,n)) %>% 
   ggplot(aes(word,n))+geom_col()+xlab(NULL)+coord_flip()
 ```
+Majority of the frequently occuring words are general terms used for apps and genres like "app" and "games"
 
 #WordCloud
 ```{r}
@@ -277,11 +271,13 @@ tidy_reviews %>% filter(Sentiment=="Positive") %>% count(word) %>% with(wordclou
 ```{r}
 tidy_reviews %>% filter(Sentiment=="Negative") %>% count(word) %>% with(wordcloud(word,n,max.words = 175))
 ```
+As expected both word clouds contains common terms that describes apps in general but also their own terms that correspond to their sentiment.
 
 ```{r}
 review_apps = apps4 %>% inner_join(reviews)
 review_apps %>% filter(Sentiment != "Neutral") -> review_apps
 ```
+#WordClouds for each genre
 ```{r}
 library(reshape2)
 review_apps %>% filter(True_Genre=="Education") %>% unnest_tokens(word,Translated_Review) %>% count(word,Sentiment,sort = TRUE) %>%  
@@ -335,7 +331,11 @@ review_apps %>% filter(True_Genre=="Tools") %>% unnest_tokens(word,Translated_Re
                    max.words = 100)
   
 ```
+Unfortunately some of the word clouds couldn't be properly generated however we again see common terms for apps appear across all the word clouds but this time we have terms that specific to each genre in both positive and negative light. For example for Action games (just games in general actually) we have positivie terms like "good" and "graphics" while negative terms like "connection" which mainly corresponds to games that require an online connection to play and server connection issues are plenty (Looking at you EA). 
+
+My favorite one is for Dating genre where you see a nice big "fake" from the negative side which represents all dating apps because they keep their platform alive by generating fake profiles which most users don't take kindly to after finding out.
 ```{r}
+#Some experimentation with fitting sentiment variables to a model
 review_apps %>% group_by(Sentiment) %>% count()
 review_apps %>% mutate(Sentiment3=cut(Sentiment_Polarity, breaks=c(-2,0,2))) %>% 
   glm(Sentiment3~Sentiment_Subjectivity,family = "binomial",data = .) %>% tidy()
@@ -345,14 +345,20 @@ review_apps %>% mutate(Sentiment3=cut(Sentiment_Polarity, breaks=c(-2,0,2))) %>%
 reg2 = lm(Rating~SIZE+I(log(Installs))+I(log(Reviews))+`Last Update`+Price+Sentiment, data = review_apps, weights = Installs)
 summary(reg2)
 ```
-Sentiment of the app is also significant to the rating, R-squared is misleading due to the sheer size of the data set.
+From this model we can see all the factors are significant from before except for price due to most apps being free. The R-squared is at a decent 84% as well. Here we have our Sentiment variable applied and we can observe from its estimate that app ratings increase by about 0.0125 for every positive review compared to negative reviews. The standard error for it is pretty low so we can trust this estimate. 
 
 ```{r}
-
+#Categorized the ratings into specific ranges
 review_apps %>% mutate(rating_int=cut(Rating,breaks = c(0,1,2,3,4,5))) -> review_apps
 ```
 
+##Conclusion
 ```{r}
+review_apps %>% filter(Sentiment != "Neutral") %>% ggplot(aes(rating_int, fill=Sentiment))+geom_bar()+facet_wrap(~True_Genre,scales = "free")
+
 review_apps %>% filter(Sentiment != "Neutral") %>% ggplot(aes(rating_int, fill=Sentiment))+geom_bar(position = "fill")+facet_wrap(~True_Genre,scales = "free")
 ```
 
+Here is a simple visualization that ties our sentiment analysis with our response variable rating from before. There are several interesting things to note here with the most eye catching one being the presence of negative reviews in (4,5] star ratings. While there are significantly more positive reviews in all categories, we have to remember we are talking about the "Sentiment" of the review here which means someone can give a good rating to the app but their review in discussing the flaws of the app make it a negative review.
+
+Looking at the proportions
