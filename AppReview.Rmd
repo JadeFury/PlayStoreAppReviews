@@ -205,9 +205,9 @@ Here we opted to model app ratings that are in the range of [1,5) since it is a 
 
 #Testing the accuracy of the Genre Classification
 ```{r}
-genre_tree = rpart( cluster ~ Reviews+Installs+SIZE+Rating+`Last Update`, data = apps4, control = rpart.control(minsplit = 1, cp = 0) )
+genre_tree = glm( True_Genre ~ Reviews+Installs+SIZE+Rating+`Last Update`, data = apps4, )
 
-rpart.plot(genre_tree)
+summary(genre_tree)
 ```
 ```{r}
 apps4 %>% add_predictions(genre_tree, type = "class" ) %>% 
@@ -342,7 +342,7 @@ review_apps %>% mutate(Sentiment3=cut(Sentiment_Polarity, breaks=c(-2,0,2))) %>%
 ```
 
 ```{r}
-reg2 = lm(Rating~SIZE+I(log(Installs))+I(log(Reviews))+`Last Update`+True_Genre+Price+Sentiment, data = review_apps, weights = Installs)
+reg2 = lm(Rating~SIZE+I(log(Installs))+I(log(Reviews))+`Last Update`+Price+Sentiment, data = review_apps, weights = Installs)
 summary(reg2)
 ```
 Sentiment of the app is also significant to the rating, R-squared is misleading due to the sheer size of the data set.
@@ -353,6 +353,6 @@ review_apps %>% mutate(rating_int=cut(Rating,breaks = c(0,1,2,3,4,5))) -> review
 ```
 
 ```{r}
-review_apps %>% filter(Sentiment != "Neutral") %>% ggplot(aes(rating_int, fill=Sentiment))+geom_bar()+facet_wrap(~True_Genre,scales = "free")
+review_apps %>% filter(Sentiment != "Neutral") %>% ggplot(aes(rating_int, fill=Sentiment))+geom_bar(position = "fill")+facet_wrap(~True_Genre,scales = "free")
 ```
 
