@@ -361,4 +361,6 @@ review_apps %>% filter(Sentiment != "Neutral") %>% ggplot(aes(rating_int, fill=S
 
 Here is a simple visualization that ties our sentiment analysis with our response variable rating from before. There are several interesting things to note here with the most eye catching one being the presence of negative reviews in (4,5] star ratings. While there are significantly more positive reviews in all categories, we have to remember we are talking about the "Sentiment" of the review here which means someone can give a good rating to the app but their review in discussing the flaws of the app make it a negative review.
 
-Looking at the proportions
+Looking at the proportions, the distrubtuions vary between ratings and each genre with some of them being roughly equal while others increase in positive reviews the higher the rating is.
+
+In conclusion, my original aim for this analysis was to model a formula that calculates the effective rating of an app based on factors discussed here but that proved to be too ambitious. Instead I ended up exploring the relationships the app ratings have with variables like the  number of installs and reviews along with the sentiment of reviews to explain how these variables statistically affect the app's overall rating so users aren't misled by what they see at first glance. 
