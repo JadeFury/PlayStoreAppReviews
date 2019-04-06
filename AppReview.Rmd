@@ -3,8 +3,8 @@ title: "Analysis of Google Play Store Apps"
 author: "Minhaz Khan"
 date: "January 12, 2019"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 
 ```{r}
@@ -19,7 +19,7 @@ library(modelr)
 ```
 ##Introduction
 
-Have you ever come across an app, saw it had a 4.5 star rating and it described exactly what you were looking for but then found out the app was extremely buggy? After taking a closer look at the app page you find out it has about a thousand installs and only a couple of hundred reviews. Majority of apps in the Google Play store and any app store in general are misleading like this due to several factors such as number of installs and reviews as mentioned above along with when it was last updated, the OS version it supports and etc. In this analysis we will be exploring the overall rating of the app. 
+Have you ever come across an app, saw it had a 4.5 star rating and it described exactly what you were looking for but then found out the app was extremely buggy? After taking a closer look at the app page you find out it has about a thousand installs and only a couple of hundred reviews. Majority of apps in the Google Play store and any app store in general are misleading like this due to several factors such as number of installs and reviews as mentioned above along with when it was last updated, the OS version it supports and etc. In this analysis we will be exploring the true rating of the app. 
 
 #Reading in the Data
 ```{r}
