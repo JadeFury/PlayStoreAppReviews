@@ -145,13 +145,15 @@ This is a peculiar residual plot due to the fact there is a specific range for t
 Here we attempt K-means clustering to create our mega genres to reduce the overwhelming number of genres we have. We are gonna cluster them into 10 specific genres as we feel it's a good amount of variety.
 ```{r}
 #Here we use the kmodes function from the kLaR package that is suitable for categorical variable clusterting like our genres
-genres = kmodes(apps2[,c(3:7,11)], modes = 10, iter.max = 10, weighted = FALSE)
+# genres = kmodes(apps2[,c(3:7,11)], modes = 10, iter.max = 10, weighted = FALSE)
+# 
+# #Each 
+# plot(jitter(apps2$Rating),col = genres$cluster)
+# points(genres$modes, col = 1:5, pch = 8)
+# genres$modes
+# genres$cluster
 
-#Each 
-plot(jitter(apps2$Rating),col = genres$cluster)
-points(genres$modes, col = 1:5, pch = 8)
-genres$modes
-genres$cluster
+#I commented this part out because it kept crashing due to memory issues
 
 
 ```
