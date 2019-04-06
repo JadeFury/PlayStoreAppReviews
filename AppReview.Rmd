@@ -5,6 +5,7 @@ date: "January 12, 2019"
 output:
   html_document: default
   pdf_document: default
+  word_document: default
 ---
 
 ```{r}
@@ -212,6 +213,7 @@ Here we opted to model app ratings that are in the range of [1,5) since it is a 
 ```{r}
 ggplot(reg1, aes(x=.fitted, y=.resid))+geom_point()+geom_smooth()
 ```
+
 The residual plot doesn't look much different from before except it's less condensed at the top since we are not considering 5 star ratings.
 
 ##Making regression models for each genre of apps
@@ -264,6 +266,7 @@ tidy_reviews %>% group_by(Sentiment) %>% count(word,sort = TRUE) %>% filter(n > 
   mutate(word=reorder(word,n)) %>% 
   ggplot(aes(word,n))+geom_col()+xlab(NULL)+coord_flip()
 ```
+
 Majority of the frequently occuring words are general terms used for apps and genres like "app" and "games"
 
 #WordCloud
@@ -276,6 +279,7 @@ tidy_reviews %>% filter(Sentiment=="Positive") %>% count(word) %>% with(wordclou
 ```{r}
 tidy_reviews %>% filter(Sentiment=="Negative") %>% count(word) %>% with(wordcloud(word,n,max.words = 175))
 ```
+
 As expected both word clouds contains common terms that describes apps in general but also their own terms that correspond to their sentiment.
 
 ```{r}
@@ -336,6 +340,7 @@ review_apps %>% filter(True_Genre=="Tools") %>% unnest_tokens(word,Translated_Re
                    max.words = 100)
   
 ```
+
 Unfortunately some of the word clouds couldn't be properly generated however we again see common terms for apps appear across all the word clouds but this time we have terms that specific to each genre in both positive and negative light. For example for Action games (just games in general actually) we have positivie terms like "good" and "graphics" while negative terms like "connection" which mainly corresponds to games that require an online connection to play and server connection issues are plenty (Looking at you EA). 
 
 My favorite one is for Dating genre where you see a nice big "fake" from the negative side which represents all dating apps because they keep their platform alive by generating fake profiles which most users don't take kindly to after finding out.
