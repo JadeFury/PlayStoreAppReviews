@@ -206,7 +206,7 @@ apps3 %>% filter(Rating >= 1 & Rating < 5) -> apps4
 reg1 = lm(Rating~SIZE+I(log(Installs))+I(log(Reviews))+`Last Update`+True_Genre-1+Price, data = apps4, weights = Installs)
 summary(reg1)
 ```
-Here we opted to model app ratings that are in the range of [1,5) since it is a more realistic range. The extremely high R-squared is misleadinsignificant because majority of the apps are free. We also observe there is a negative slope for installs and positive slope for the number of reviews which confirms some of our hypotheses in the introduction where a decent app has a lot of installs but not enough reviews to have the score it truly deserves. As expected, the "Last Update" is also significant because it affects the overall rating of the app if the developers don't update to fix the bugs, so the more updated an app is the better the rating hence the positive slope. 
+Here we opted to model app ratings that are in the range of [1,5) since it is a more realistic range. The extremely high R-squared is misleading since here we are looking at the mean rating for each genre. We also observe there is a negative slope for installs and positive slope for the number of reviews which confirms some of our hypotheses in the introduction where a decent app has a lot of installs but not enough reviews to have the score it truly deserves. As expected, the "Last Update" is also significant because it affects the overall rating of the app if the developers don't update to fix the bugs, so the more updated an app is the better the rating hence the positive slope. 
 
 
 ```{r}
