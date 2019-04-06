@@ -2,7 +2,9 @@
 title: "Analysis of Google Play Store Apps"
 author: "Minhaz Khan"
 date: "January 12, 2019"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r}
@@ -154,7 +156,7 @@ genres$cluster
 
 ```
 ```{r}
-genres = load("genres.rds")
+genres = readRDS("genres.rds")
 ```
 However I'm loading the cluster that had the preferable generated genres to be used for the rest of the analysis.
 ```{r}
