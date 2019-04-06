@@ -138,6 +138,7 @@ Taking the log of Installs and Reviews and weighing it with the Installs helped 
 ```{r}
 ggplot(appreg, aes(x=.fitted, y=.resid))+geom_point()+geom_smooth()
 ```
+
 This is a peculiar residual plot due to the fact there is a specific range for the ratings (0-5), there seems to be a certain pattern in its overall shape but it's difficult to judge the overall randomness.
 
 #Kmeans for Genres
