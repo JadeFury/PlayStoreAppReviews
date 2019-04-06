@@ -57,7 +57,7 @@ apps2$`Current Ver`= NULL
 ```
 Removed Symbol because it was just character; removed category because it was the same as genre, removed Current Version because it isn't as necessary as when the app was last updated. Kept Android version because exploring app compatibility with OS might be interesting.
 
-#Converting character values to numeric
+##Converting character values to numeric
 The convert parameter in seperate didn't work so here we are manually converting Installs and Size to numeric variables
 ```{r}
 apps2$Installs = as.numeric(gsub(",","",apps2$Installs))
@@ -65,7 +65,7 @@ apps2$Size = as.numeric(as.character(apps2$Size))
 glimpse(apps2)
 ```
 
-#Converting dates
+##Converting dates
 ```{r}
 
 apps2$`Last Updated` = gsub(",","",apps2$`Last Updated`)
@@ -82,7 +82,7 @@ apps2 %>% mutate(Price = case_when(
 
 ```
 
-#Converting kilobyte app size
+##Converting kilobyte app size
 ```{r}
 apps2 %>% mutate(SIZE = case_when(
                               Type == "M" ~ Size, 
@@ -97,7 +97,7 @@ apps2$Type = NULL
 The case_when function helped out here because values in the columns to be changed aren't the same.
 
 
-#Some Descriptive Statistics
+##Some Descriptive Statistics
 ```{r}
 apps2 %>% group_by(Genres) %>% summarise(m=mean(Rating))
 (apps_aov = aov(Rating~SIZE+Installs+Price+Reviews+Genres+`Content Rating`+`Last Update`, data = apps2))
@@ -118,9 +118,9 @@ ggplot(apps2, aes(Rating,Price))+geom_point()+xlim(0,5)+ylim(min(apps2$Price),ma
 ```
 Effective rating goes down after reaching its peak in proportion to the categories above as expected. This highlights the fact that good apps exist but doesn't get much attention or the ratings and reviews are fabricated.
 
-## Regression Models
+#Regression Models
 
-#Fixing duplicate Genres under similar terms
+##Fixing duplicate Genres under similar terms
 ```{r}
 apps2 %>% mutate(Genres = case_when(
                               Genres == "Educational" ~ "Education", 
@@ -140,7 +140,7 @@ ggplot(appreg, aes(x=.fitted, y=.resid))+geom_point()+geom_smooth()
 ```
 This is a peculiar residual plot due to the fact there is a specific range for the ratings (0-5), there seems to be a certain pattern in its overall shape but it's difficult to judge the overall randomness.
 
-##Kmeans for Genres
+#Kmeans for Genres
 
 Here we attempt K-means clustering to create our mega genres to reduce the overwhelming number of genres we have. We are gonna cluster them into 10 specific genres as we feel it's a good amount of variety.
 ```{r}
@@ -192,7 +192,7 @@ apps2 %>% mutate(True_Genre = case_when(
 apps3 %>% group_by(True_Genre) %>% count()
 ```
 
-##Regression Model with the new Genres:
+#Regression Model with the new Genres:
 
 ```{r}
 newreg = lm(Rating~SIZE+I(log(Installs))+I(log(Reviews))+`Last Update`+True_Genre+Price, data = apps3, weights = Installs)
@@ -213,7 +213,7 @@ ggplot(reg1, aes(x=.fitted, y=.resid))+geom_point()+geom_smooth()
 ```
 The residual plot doesn't look much different from before except it's less condensed at the top since we are not considering 5 star ratings.
 
-#Making regression models for each genre of apps
+##Making regression models for each genre of apps
 
 ```{r}
 apps4 %>% filter(True_Genre == "Action") %>% lm(Rating~SIZE+I(log(Installs))+I(log(Reviews))+`Last Update`+Price, data = ., weights = Installs) %>% tidy() 
@@ -234,7 +234,7 @@ Last update isn't significant on fiance apps because they are usually made a for
 Tools app has a highly significant p-value with reviews and that's because tools apps are concerned with managing the phone as a whole like boosting battery life and file management so if they aren't working as intended consumers will report their issues which significantly affect the ratings. 
 
 
-##Sentiment Analysis
+#Sentiment Analysis
 Here we explore user reviews and visualize their positive and negative reviews and attempt to connect them to our previous modelss
 ```{r}
 #Reading and cleaning the data
@@ -247,7 +247,7 @@ reviews = read_csv("googleplaystore_user_reviews.csv")
 reviews %>% ggplot(aes(x=Sentiment,y=Sentiment_Subjectivity))+geom_boxplot()
 ```
 
-#Seperating every review into Individual Words
+##Seperating every review into Individual Words
 ```{r}
 (tidy_reviews <- reviews %>% filter(Sentiment != "Neutral") %>% group_by(Sentiment) %>% unnest_tokens(word,Translated_Review))
 ```
@@ -281,7 +281,7 @@ As expected both word clouds contains common terms that describes apps in genera
 review_apps = apps4 %>% inner_join(reviews)
 review_apps %>% filter(Sentiment != "Neutral") -> review_apps
 ```
-#WordClouds for each genre
+##WordClouds for each genre
 ```{r}
 library(reshape2)
 review_apps %>% filter(True_Genre=="Education") %>% unnest_tokens(word,Translated_Review) %>% count(word,Sentiment,sort = TRUE) %>%  
@@ -356,7 +356,7 @@ From this model we can see all the factors are significant from before except fo
 review_apps %>% mutate(rating_int=cut(Rating,breaks = c(0,1,2,3,4,5))) -> review_apps
 ```
 
-##Conclusion
+#Conclusion
 ```{r}
 review_apps %>% filter(Sentiment != "Neutral") %>% ggplot(aes(rating_int, fill=Sentiment))+geom_bar()+facet_wrap(~True_Genre,scales = "free")
 
